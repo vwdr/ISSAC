@@ -4,7 +4,6 @@
  */
 
 `default_nettype none
-`timescale 1ns / 1ps
 
 module systolic_array_2x2 (
     input  wire        clk,

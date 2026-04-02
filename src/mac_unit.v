@@ -4,7 +4,6 @@
  */
 
 `default_nettype none
-`timescale 1ns / 1ps
 
 module mac_unit (
     input  wire [7:0]  a,
