@@ -4,6 +4,10 @@ on:
   push:
   workflow_dispatch:
 
+env:
+  GITHUB_TOKEN: ${{ github.token }}
+  GH_TOKEN: ${{ github.token }}
+
 jobs:
   gds:
     runs-on: ubuntu-24.04
