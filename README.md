@@ -1,45 +1,50 @@
 ![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
 
-# ⚠️ This template is old and outdated ⚠️
+# ISAAC
 
-Please use **[ttsky-verilog-template](https://github.com/TinyTapeout/ttsky-verilog-template)** for new projects.
+ISAAC is an INT8 neural-network inference accelerator for Tiny Tapeout. The current implementation targets a 2x2 systolic matrix-vector multiply core with SPI-based loading and 16-bit result readback.
 
-# Tiny Tapeout Verilog Project Template
+## Status
 
-- [Read the documentation for project](docs/info.md)
+- `mac_unit`, `systolic_array_2x2`, `spi_slave`, `control_fsm`, and `tt_um_isaac` are implemented.
+- Cocotb regressions exist at both module level and top level.
+- The default `make -B` flow runs the end-to-end top-level SPI regression.
 
-## What is Tiny Tapeout?
+## Top Module
 
-Tiny Tapeout is an educational project that aims to make it easier and cheaper than ever to get your digital and analog designs manufactured on a real chip.
+`tt_um_isaac`
 
-To learn more and get started, visit https://tinytapeout.com.
+## Quick Test
 
-## Set up your Verilog project
+```sh
+cd test
+make -B
+```
 
-1. Add your Verilog files to the `src` folder.
-2. Edit the [info.yaml](info.yaml) and update information about your project, paying special attention to the `source_files` and `top_module` properties. If you are upgrading an existing Tiny Tapeout project, check out our [online info.yaml migration tool](https://tinytapeout.github.io/tt-yaml-upgrade-tool/).
-3. Edit [docs/info.md](docs/info.md) and add a description of your project.
-4. Adapt the testbench to your design. See [test/README.md](test/README.md) for more information.
+## Design Summary
 
-The GitHub action will automatically build the ASIC files using [OpenLane](https://www.zerotoasiccourse.com/terminology/openlane/).
+- `ui_in[0]`: `spi_clk`
+- `ui_in[1]`: `spi_mosi`
+- `ui_in[2]`: `spi_cs_n`
+- `ui_in[4:3]`: mode select
+- `uo_out[0]`: `spi_miso`
+- `uo_out[1]`: `busy`
+- `uo_out[2]`: `done`
+- `uio[7:0]`: parallel data bus / result output bus
 
-## Enable GitHub actions to build the results page
+Mode values:
 
-- [Enabling GitHub Pages](https://tinytapeout.com/faq/#my-github-action-is-failing-on-the-pages-part)
+- `00`: idle
+- `01`: load weights
+- `10`: load input vector
+- `11`: compute and output
 
-## Resources
+See `docs/info.md` for the project datasheet content.
 
-- [FAQ](https://tinytapeout.com/faq/)
-- [Digital design lessons](https://tinytapeout.com/digital_design/)
-- [Learn how semiconductors work](https://tinytapeout.com/siliwiz/)
-- [Join the community](https://tinytapeout.com/discord)
-- [Build your design locally](https://www.tinytapeout.com/guides/local-hardening/)
+## GitHub Actions
 
-## What next?
+- `test`: runs cocotb RTL verification
+- `docs`: builds the Tiny Tapeout docs page from `info.yaml` and `docs/info.md`
+- `gds`: runs hardening, precheck, gate-level test, and viewer generation
 
-- [Submit your design to the next shuttle](https://app.tinytapeout.com/).
-- Edit [this README](README.md) and explain your design, how it works, and how to test it.
-- Share your project on your social network of choice:
-  - LinkedIn [#tinytapeout](https://www.linkedin.com/search/results/content/?keywords=%23tinytapeout) [@TinyTapeout](https://www.linkedin.com/company/100708654/)
-  - Mastodon [#tinytapeout](https://chaos.social/tags/tinytapeout) [@matthewvenn](https://chaos.social/@matthewvenn)
-  - X (formerly Twitter) [#tinytapeout](https://twitter.com/hashtag/tinytapeout) [@tinytapeout](https://twitter.com/tinytapeout)
+For local hardening guidance, see https://www.tinytapeout.com/guides/local-hardening/.

@@ -43,5 +43,5 @@ jobs:
         with:
           name: test-vcd
           path: |
-            test/tb.vcd
+            test/*.vcd
             test/results.xml
