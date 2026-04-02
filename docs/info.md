@@ -2,6 +2,40 @@
 
 ISAAC is a Tiny Tapeout INT8 inference building block built around a 2x2 systolic multiply-accumulate core.
 
+### Architecture diagram
+
+```text
+                 +----------------------- tt_um_isaac ------------------------+
+ui_in[0] spi_clk |                                                            |
+ui_in[1] mosi -->|  +-----------+      +-------------+      +--------------+  |
+ui_in[2] cs_n -->|->| spi_slave |----->| control_fsm |----->| systolic 2x2 |--+-- compute_result
+ui_in[4:3] mode -|  |           |<-----|             |<-----|              |  |
+                 |  +-----------+      +-------------+      +--------------+  |
+                 |       |                    |                     |          |
+                 |       |                    |                     |          |
+                 |   uo_out[0]           busy/done/debug        weights,input |
+                 |                                                            |
+uio_in[7:0] ---->|---------------- parallel load bus ------------------------>| 
+                 |<--------------- parallel result byte ---------------- uio_out[7:0]
+                 |---------------- output enable control ---------------- uio_oe[7:0]
+                 +----------------------------------------------------------------+
+```
+
+The control path is intentionally simple:
+
+1. Load four INT8 weights.
+2. Load two INT8 input values.
+3. Pulse `start` into the compute core.
+4. Wait for `done`.
+5. Read back two 16-bit result words.
+
+Inside the compute core, each row uses two MAC operations:
+
+```text
+row0 = w00*in0 + w01*in1
+row1 = w10*in0 + w11*in1
+```
+
 The top-level module `tt_um_isaac` exposes a small SPI slave plus an 8-bit bidirectional data bus. The host loads four signed 8-bit weights and two signed 8-bit input values, then requests a compute step. Internally the design contains:
 
 - `spi_slave`: synchronizes `spi_clk`, `spi_mosi`, and `spi_cs_n` into the system clock domain and performs 16-bit SPI transfers in mode 0.
