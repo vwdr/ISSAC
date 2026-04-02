@@ -4,6 +4,8 @@
 
 ISAAC is an INT8 neural-network inference accelerator for Tiny Tapeout. The current implementation targets a 2x2 systolic matrix-vector multiply core with SPI-based loading and 16-bit result readback.
 
+The current submission branch is configured for a `1x2` Tiny Tapeout footprint so the full 2x2 INT8 compute path can harden successfully.
+
 ## Status
 
 - `mac_unit`, `systolic_array_2x2`, `spi_slave`, `control_fsm`, and `tt_um_isaac` are implemented.

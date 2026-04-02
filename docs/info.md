@@ -2,6 +2,8 @@
 
 ISAAC is a Tiny Tapeout INT8 inference building block built around a 2x2 systolic multiply-accumulate core.
 
+The current implementation is configured for a `1x2` Tiny Tapeout footprint. The original `1x1` target was too small for the full 2x2 INT8 datapath plus SPI/control logic during OpenLane hardening.
+
 ### Architecture diagram
 
 ```text
