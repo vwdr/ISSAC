@@ -50,6 +50,17 @@ module tt_um_isaac (
     wire load_bus_active = (state_dbg == STATE_LOAD_WEIGHTS) || (state_dbg == STATE_LOAD_INPUT);
     wire output_bus_active = (state_dbg == STATE_OUTPUT);
 
+    // Keep these as separate nets so LVS preserves the intended one-bit-to-one-pin mapping
+    // even though all OE bits share the same logical value.
+    (* keep *) wire uio_oe_0 = output_bus_active;
+    (* keep *) wire uio_oe_1 = output_bus_active;
+    (* keep *) wire uio_oe_2 = output_bus_active;
+    (* keep *) wire uio_oe_3 = output_bus_active;
+    (* keep *) wire uio_oe_4 = output_bus_active;
+    (* keep *) wire uio_oe_5 = output_bus_active;
+    (* keep *) wire uio_oe_6 = output_bus_active;
+    (* keep *) wire uio_oe_7 = output_bus_active;
+
     spi_slave spi_if (
         .clk(clk),
         .rst_n(rst_n),
@@ -120,7 +131,16 @@ module tt_um_isaac (
     };
 
     assign uio_out = output_bus_active ? parallel_out : 8'd0;
-    assign uio_oe  = output_bus_active ? 8'hff : 8'h00;
+    assign uio_oe  = {
+        uio_oe_7,
+        uio_oe_6,
+        uio_oe_5,
+        uio_oe_4,
+        uio_oe_3,
+        uio_oe_2,
+        uio_oe_1,
+        uio_oe_0
+    };
 
     wire _unused = &{ena, ui_in[7:5], result_data[31:0], byte_count_dbg[2], 1'b0};
 
