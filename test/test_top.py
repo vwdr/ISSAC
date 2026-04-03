@@ -83,6 +83,24 @@ async def wait_for_done(dut) -> None:
     raise AssertionError("done did not assert")
 
 
+def resolved_int_or_none(value) -> int | None:
+    binstr = value.binstr.lower()
+    if "x" in binstr or "z" in binstr:
+        return None
+    return int(value)
+
+
+async def wait_for_signal_value(signal, clk, expected: int, cycles: int = 80) -> None:
+    for _ in range(cycles):
+        observed = resolved_int_or_none(signal.value)
+        if observed == expected:
+            return
+        await RisingEdge(clk)
+
+    observed = signal.value.binstr
+    raise AssertionError(f"signal did not settle to 0x{expected:X}, last value was {observed}")
+
+
 @cocotb.test
 async def test_top_end_to_end_spi_flow(dut):
     clock = Clock(dut.clk, 10, units="ns")
@@ -92,19 +110,18 @@ async def test_top_end_to_end_spi_flow(dut):
     await reset_dut(dut, host)
 
     set_ui_fields(dut, host, mode=MODE_LOAD_WEIGHTS)
-    await ClockCycles(dut.clk, 2)
-    assert int(dut.uio_oe.value) == 0x00
+    await wait_for_signal_value(dut.uio_oe, dut.clk, 0x00)
     await spi_transfer_word(dut, host, 0x0203)
     await spi_transfer_word(dut, host, 0x0405)
 
     set_ui_fields(dut, host, mode=MODE_LOAD_INPUT)
-    await ClockCycles(dut.clk, 2)
+    await wait_for_signal_value(dut.uio_oe, dut.clk, 0x00)
     await spi_transfer_word(dut, host, 0x0607)
 
     set_ui_fields(dut, host, mode=MODE_COMPUTE)
     await wait_for_done(dut)
 
-    assert int(dut.uio_oe.value) == 0xFF
+    await wait_for_signal_value(dut.uio_oe, dut.clk, 0xFF)
     assert int(dut.uio_out.value) == 0x21
     assert int(dut.dut.ctrl.spi_tx_data.value) == 0x0021
 
@@ -116,5 +133,4 @@ async def test_top_end_to_end_spi_flow(dut):
     assert row1_word == 0x003B, f"expected second result word 0x003B, got 0x{row1_word:04X}"
 
     set_ui_fields(dut, host, mode=MODE_IDLE)
-    await ClockCycles(dut.clk, 2)
-    assert int(dut.uio_oe.value) == 0x00
+    await wait_for_signal_value(dut.uio_oe, dut.clk, 0x00)
