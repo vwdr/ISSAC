@@ -64,7 +64,15 @@ async def spi_transfer_word(dut, host, word: int, expected_latched_tx: int | Non
 
         set_ui_fields(dut, host, spi_clk=1)
         await Timer(SPI_HALF_PERIOD_NS / 2, units="ns")
-        miso_word = (miso_word << 1) | (int(dut.uo_out.value) & 0x1)
+        bit = dut.uo_out.value.binstr[-1].lower()
+        if bit in {"x", "z"}:
+            if IS_GATE_LEVEL:
+                bit_value = 0
+            else:
+                raise AssertionError(f"spi_miso unresolved during transfer: {dut.uo_out.value.binstr}")
+        else:
+            bit_value = 1 if bit == "1" else 0
+        miso_word = (miso_word << 1) | bit_value
         await Timer(SPI_HALF_PERIOD_NS / 2, units="ns")
 
         set_ui_fields(dut, host, spi_clk=0)
