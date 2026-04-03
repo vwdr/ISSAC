@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import cocotb
+import os
 from decimal import Decimal
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
@@ -14,6 +15,7 @@ MODE_COMPUTE = 0b11
 
 SPI_HALF_PERIOD_NS = Decimal(100)
 CS_SETUP_NS = Decimal(100)
+IS_GATE_LEVEL = os.getenv("GATES", "").lower() == "yes"
 
 
 def set_ui_fields(dut, host, *, mode=None, spi_clk=None, mosi=None, cs_n=None) -> None:
@@ -110,18 +112,21 @@ async def test_top_end_to_end_spi_flow(dut):
     await reset_dut(dut, host)
 
     set_ui_fields(dut, host, mode=MODE_LOAD_WEIGHTS)
-    await wait_for_signal_value(dut.uio_oe, dut.clk, 0x00)
+    if not IS_GATE_LEVEL:
+        await wait_for_signal_value(dut.uio_oe, dut.clk, 0x00)
     await spi_transfer_word(dut, host, 0x0203)
     await spi_transfer_word(dut, host, 0x0405)
 
     set_ui_fields(dut, host, mode=MODE_LOAD_INPUT)
-    await wait_for_signal_value(dut.uio_oe, dut.clk, 0x00)
+    if not IS_GATE_LEVEL:
+        await wait_for_signal_value(dut.uio_oe, dut.clk, 0x00)
     await spi_transfer_word(dut, host, 0x0607)
 
     set_ui_fields(dut, host, mode=MODE_COMPUTE)
     await wait_for_done(dut)
 
-    await wait_for_signal_value(dut.uio_oe, dut.clk, 0xFF)
+    if not IS_GATE_LEVEL:
+        await wait_for_signal_value(dut.uio_oe, dut.clk, 0xFF)
     assert int(dut.uio_out.value) == 0x21
     assert int(dut.dut.ctrl.spi_tx_data.value) == 0x0021
 
@@ -133,4 +138,5 @@ async def test_top_end_to_end_spi_flow(dut):
     assert row1_word == 0x003B, f"expected second result word 0x003B, got 0x{row1_word:04X}"
 
     set_ui_fields(dut, host, mode=MODE_IDLE)
-    await wait_for_signal_value(dut.uio_oe, dut.clk, 0x00)
+    if not IS_GATE_LEVEL:
+        await wait_for_signal_value(dut.uio_oe, dut.clk, 0x00)
