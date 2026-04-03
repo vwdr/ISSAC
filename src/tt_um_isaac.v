@@ -120,14 +120,7 @@ module tt_um_isaac (
     };
 
     assign uio_out = output_bus_active ? parallel_out : 8'd0;
-    assign uio_oe[0] = output_bus_active;
-    assign uio_oe[1] = output_bus_active;
-    assign uio_oe[2] = output_bus_active;
-    assign uio_oe[3] = output_bus_active;
-    assign uio_oe[4] = output_bus_active;
-    assign uio_oe[5] = output_bus_active;
-    assign uio_oe[6] = output_bus_active;
-    assign uio_oe[7] = output_bus_active;
+    assign uio_oe  = output_bus_active ? 8'hff : 8'h00;
 
     wire _unused = &{ena, ui_in[7:5], result_data[31:0], byte_count_dbg[2], 1'b0};
 
