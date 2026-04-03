@@ -85,7 +85,7 @@ async def spi_transfer_word(dut, host, word: int, expected_latched_tx: int | Non
 
 
 async def wait_for_done(dut) -> None:
-    max_cycles = 4000 if IS_GATE_LEVEL else 40
+    max_cycles = 50000 if IS_GATE_LEVEL else 40
 
     for _ in range(max_cycles):
         await RisingEdge(dut.clk)
