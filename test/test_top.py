@@ -87,7 +87,12 @@ async def spi_transfer_word(dut, host, word: int, expected_latched_tx: int | Non
 async def wait_for_done(dut) -> None:
     for _ in range(40):
         await RisingEdge(dut.clk)
-        if ((int(dut.uo_out.value) >> 2) & 0x1) == 1:
+        done_bit = dut.uo_out.value.binstr[-3].lower()
+        if done_bit in {"x", "z"}:
+            if IS_GATE_LEVEL:
+                continue
+            raise AssertionError(f"done unresolved while waiting: {dut.uo_out.value.binstr}")
+        if done_bit == "1":
             return
 
     raise AssertionError("done did not assert")
