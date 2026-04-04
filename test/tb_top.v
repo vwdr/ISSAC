@@ -18,7 +18,20 @@ module tb_top;
   wire [7:0] uio_out;
   wire [7:0] uio_oe;
 
+  // Sky130 functional cell models (compiled with -DUSE_POWER_PINS) contain
+  // power-aware UDPs that check VPWR===1 and VGND===0.  Without these
+  // connections every flip-flop output stays X, which is why the GL test
+  // was failing.
+`ifdef GL_TEST
+  wire VPWR = 1'b1;
+  wire VGND = 1'b0;
+`endif
+
   tt_um_isaac dut (
+`ifdef GL_TEST
+      .VPWR(VPWR),
+      .VGND(VGND),
+`endif
       .ui_in(ui_in),
       .uo_out(uo_out),
       .uio_in(uio_in),
